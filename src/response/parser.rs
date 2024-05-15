@@ -17,7 +17,10 @@ fn parse_simple_string(buffer: BytesMut) -> Result<(Response, usize), String> {
         let string = String::from_utf8(buf.to_vec()).unwrap();
         return Ok((Response::SimpleString(string), len + 1));
     }
-    Err(format!("Invalid string {:?}", buffer))
+    Err(format!(
+        "Invalid simple string format: missing CRLF {:?}",
+        buffer
+    ))
 }
 
 fn parse_bulk_string(buffer: BytesMut) -> Result<(Response, usize), String> {
