@@ -8,6 +8,7 @@ pub fn parse_message(buffer: BytesMut) -> Result<(Response, usize), String> {
     match buffer[0] as char {
         '+' => parse_simple_string(buffer),
         '$' => parse_bulk_string(buffer),
+        '*' => parse_array(buffer),
         _ => Err(format!("Not a known value type {:?}", buffer)),
     }
 }
@@ -56,6 +57,35 @@ fn parse_bulk_string(buffer: BytesMut) -> Result<(Response, usize), String> {
         "Failed to convert bulk string to UTF-8: {:?}",
         buffer
     ))
+}
+
+fn parse_array(buffer: BytesMut) -> Result<(Response, usize), String> {
+    let (array_length, mut bytes_consumed) = if let Some((buf, len)) = read_until_crlf(&buffer[1..])
+    {
+        if let Ok(array_length) = parse_int(buf) {
+            (array_length, len + 1)
+        } else {
+            return Err(format!("Failed to parse array length: {:?}", buffer));
+        }
+    } else {
+        return Err(format!("Invalid array format: missing CRLF {:?}", buffer));
+    };
+
+    let mut array = vec![];
+
+    for _ in 0..array_length {
+        if bytes_consumed >= buffer.len() {
+            return Err(format!(
+                "Unexpected end of input while parsing array {:?}",
+                buffer
+            ));
+        }
+        let (item, len) = parse_message(BytesMut::from(&buffer[bytes_consumed..]))?;
+        array.push(item);
+        bytes_consumed += len;
+    }
+
+    Ok((Response::Array(array), bytes_consumed))
 }
 
 fn read_until_crlf(buffer: &[u8]) -> Option<(&[u8], usize)> {
