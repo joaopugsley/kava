@@ -2,9 +2,9 @@ use std::num::ParseIntError;
 
 use bytes::BytesMut;
 
-use super::response::Response;
+use super::response::Value;
 
-pub fn parse_message(buffer: BytesMut) -> Result<(Response, usize), String> {
+pub fn parse_message(buffer: BytesMut) -> Result<(Value, usize), String> {
     match buffer[0] as char {
         '+' => parse_simple_string(buffer),
         '$' => parse_bulk_string(buffer),
@@ -13,10 +13,10 @@ pub fn parse_message(buffer: BytesMut) -> Result<(Response, usize), String> {
     }
 }
 
-fn parse_simple_string(buffer: BytesMut) -> Result<(Response, usize), String> {
+fn parse_simple_string(buffer: BytesMut) -> Result<(Value, usize), String> {
     if let Some((buf, len)) = read_until_crlf(&buffer[1..]) {
         let string = String::from_utf8(buf.to_vec()).unwrap();
-        return Ok((Response::SimpleString(string), len + 1));
+        return Ok((Value::SimpleString(string), len + 1));
     }
     Err(format!(
         "Invalid simple string format: missing CRLF {:?}",
@@ -24,7 +24,7 @@ fn parse_simple_string(buffer: BytesMut) -> Result<(Response, usize), String> {
     ))
 }
 
-fn parse_bulk_string(buffer: BytesMut) -> Result<(Response, usize), String> {
+fn parse_bulk_string(buffer: BytesMut) -> Result<(Value, usize), String> {
     let (bulk_str_length, bytes_consumed) = if let Some((buf, len)) = read_until_crlf(&buffer[1..])
     {
         if let Ok(bulk_str_length) = parse_int(buf) {
@@ -50,7 +50,7 @@ fn parse_bulk_string(buffer: BytesMut) -> Result<(Response, usize), String> {
     }
 
     if let Ok(string) = String::from_utf8(buffer[bytes_consumed..end_of_bulk_str].to_vec()) {
-        return Ok((Response::BulkString(string), total_parsed));
+        return Ok((Value::BulkString(string), total_parsed));
     }
 
     Err(format!(
@@ -59,7 +59,7 @@ fn parse_bulk_string(buffer: BytesMut) -> Result<(Response, usize), String> {
     ))
 }
 
-fn parse_array(buffer: BytesMut) -> Result<(Response, usize), String> {
+fn parse_array(buffer: BytesMut) -> Result<(Value, usize), String> {
     let (array_length, mut bytes_consumed) = if let Some((buf, len)) = read_until_crlf(&buffer[1..])
     {
         if let Ok(array_length) = parse_int(buf) {
@@ -85,7 +85,7 @@ fn parse_array(buffer: BytesMut) -> Result<(Response, usize), String> {
         bytes_consumed += len;
     }
 
-    Ok((Response::Array(array), bytes_consumed))
+    Ok((Value::Array(array), bytes_consumed))
 }
 
 fn read_until_crlf(buffer: &[u8]) -> Option<(&[u8], usize)> {

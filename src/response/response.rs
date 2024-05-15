@@ -7,22 +7,22 @@ use tokio::{
 use super::parser::parse_message;
 
 #[derive(Clone, Debug)]
-pub enum Response {
+pub enum Value {
     NullBulkString(),
     NullArray(),
     SimpleString(String),
     BulkString(String),
-    Array(Vec<Response>),
+    Array(Vec<Value>),
 }
 
-impl Response {
+impl Value {
     // https://redis.io/docs/latest/develop/reference/protocol-spec/
     pub fn serialize(self) -> String {
         match self {
-            Response::NullBulkString() => format!("$-1\r\n"),
-            Response::NullArray() => format!("*-1\r\n"),
-            Response::SimpleString(s) => format!("+{}\r\n", s),
-            Response::BulkString(s) => format!("${}\r\n{}\r\n", s.len(), s),
+            Value::NullBulkString() => format!("$-1\r\n"),
+            Value::NullArray() => format!("*-1\r\n"),
+            Value::SimpleString(s) => format!("+{}\r\n", s),
+            Value::BulkString(s) => format!("${}\r\n{}\r\n", s.len(), s),
             _ => panic!("Unsupported value for serialize!"),
         }
     }
@@ -41,7 +41,7 @@ impl ResponseHandler {
         }
     }
 
-    pub async fn read_value(&mut self) -> Result<Option<Response>, String> {
+    pub async fn read_value(&mut self) -> Result<Option<Value>, String> {
         match self.stream.read_buf(&mut self.buffer).await {
             Ok(bytes_read) => {
                 if bytes_read == 0 {
@@ -60,7 +60,7 @@ impl ResponseHandler {
         }
     }
 
-    pub async fn write_value(&mut self, response: Response) -> Result<(), String> {
+    pub async fn write_value(&mut self, response: Value) -> Result<(), String> {
         let _ = self.stream.write(response.serialize().as_bytes()).await;
         Ok(())
     }
