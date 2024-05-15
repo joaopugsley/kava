@@ -26,20 +26,33 @@ fn parse_bulk_string(buffer: BytesMut) -> Result<(Response, usize), String> {
         if let Ok(bulk_str_length) = parse_int(buf) {
             (bulk_str_length, len + 1)
         } else {
-            return Err(format!("Invalid bulk string format {:?}", buffer));
+            return Err(format!("Failed to parse bulk string length: {:?}", buffer));
         }
     } else {
-        return Err(format!("Invalid bulk string format {:?}", buffer));
+        return Err(format!(
+            "Invalid bulk string format: missing CRLF {:?}",
+            buffer
+        ));
     };
 
     let end_of_bulk_str = bytes_consumed + bulk_str_length as usize;
     let total_parsed = end_of_bulk_str + 2;
 
+    if end_of_bulk_str > buffer.len() {
+        return Err(format!(
+            "Invalid bulk string format: length exceeds buffer size: {:?}",
+            buffer
+        ));
+    }
+
     if let Ok(string) = String::from_utf8(buffer[bytes_consumed..end_of_bulk_str].to_vec()) {
         return Ok((Response::BulkString(string), total_parsed));
     }
 
-    Err(format!("Invalid bulk string format {:?}", buffer))
+    Err(format!(
+        "Failed to convert bulk string to UTF-8: {:?}",
+        buffer
+    ))
 }
 
 fn read_until_crlf(buffer: &[u8]) -> Option<(&[u8], usize)> {
