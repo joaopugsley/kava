@@ -4,6 +4,24 @@ use bytes::BytesMut;
 
 use super::response::Value;
 
+pub fn parse_command(value: Value) -> Result<(String, Vec<String>), String> {
+    match value {
+        Value::Array(arr) => match unpack_bulk_string(arr.first().unwrap().clone()) {
+            Ok(command) => {
+                let args: Result<Vec<String>, String> = arr
+                    .into_iter()
+                    .skip(1)
+                    .map(|v| unpack_bulk_string(v.clone()))
+                    .collect();
+
+                args.map(|args| (command, args))
+            }
+            Err(err) => Err(err),
+        },
+        _ => Err("Unexpected command format".to_string()),
+    }
+}
+
 pub fn parse_message(buffer: BytesMut) -> Result<(Value, usize), String> {
     match buffer[0] as char {
         '+' => parse_simple_string(buffer),
@@ -99,4 +117,11 @@ fn read_until_crlf(buffer: &[u8]) -> Option<(&[u8], usize)> {
 
 fn parse_int(buffer: &[u8]) -> Result<i64, ParseIntError> {
     String::from_utf8(buffer.to_vec()).unwrap().parse::<i64>()
+}
+
+fn unpack_bulk_string(value: Value) -> Result<String, String> {
+    match value {
+        Value::BulkString(s) => Ok(s),
+        _ => Err(format!("Invalid bulk string {:?}", value)),
+    }
 }
