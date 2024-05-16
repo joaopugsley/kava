@@ -13,6 +13,7 @@ pub enum Value {
     SimpleString(String),
     BulkString(String),
     Array(Vec<Value>),
+    SimpleError(String),
 }
 
 impl Value {
@@ -23,6 +24,7 @@ impl Value {
             Value::NullArray() => format!("*-1\r\n"),
             Value::SimpleString(s) => format!("+{}\r\n", s),
             Value::BulkString(s) => format!("${}\r\n{}\r\n", s.len(), s),
+            Value::SimpleError(s) => format!("-ERR {}\r\n", s),
             _ => panic!("Unsupported value for serialize!"),
         }
     }
