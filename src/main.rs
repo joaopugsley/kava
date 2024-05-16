@@ -1,4 +1,4 @@
-use resp::{parse_command, ResponseHandler};
+use resp::{parse_command, ResponseHandler, Value};
 use tokio::net::{TcpListener, TcpStream};
 
 mod commands;
@@ -31,8 +31,10 @@ async fn handle_connection(stream: TcpStream) {
         let response = if let Some(val) = value {
             match parse_command(val) {
                 Ok((command, args)) => match command.to_lowercase().as_str() {
+                    "quit" => commands::quit(),
+                    "info" => commands::info(),
                     "ping" => commands::ping(args),
-                    unknown => panic!("Unknown command '{}'", unknown),
+                    unknown => Value::SimpleError(format!("Unknown command '{}'", unknown)),
                 },
                 _ => {
                     break;
