@@ -41,6 +41,7 @@ async fn handle_connection(stream: TcpStream, db: Arc<Database>) {
                     "info" => commands::info(),
                     "ping" => commands::ping(args),
                     "echo" => commands::echo(args),
+                    "get" => commands::get(args, &db).await,
                     unknown => Value::SimpleError(format!("ERR Unknown command '{}'", unknown)),
                 },
                 _ => {
