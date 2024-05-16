@@ -34,7 +34,8 @@ async fn handle_connection(stream: TcpStream) {
                     "quit" => commands::quit(),
                     "info" => commands::info(),
                     "ping" => commands::ping(args),
-                    unknown => Value::SimpleError(format!("Unknown command '{}'", unknown)),
+                    "echo" => commands::echo(args),
+                    unknown => Value::SimpleError(format!("ERR Unknown command '{}'", unknown)),
                 },
                 _ => {
                     break;

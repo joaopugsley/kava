@@ -24,7 +24,7 @@ impl Value {
             Value::NullArray() => format!("*-1\r\n"),
             Value::SimpleString(s) => format!("+{}\r\n", s),
             Value::BulkString(s) => format!("${}\r\n{}\r\n", s.len(), s),
-            Value::SimpleError(s) => format!("-ERR {}\r\n", s),
+            Value::SimpleError(s) => format!("-{}\r\n", s),
             _ => panic!("Unsupported value for serialize!"),
         }
     }
