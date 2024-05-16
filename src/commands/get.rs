@@ -6,7 +6,7 @@ use crate::{database::Database, resp::Value};
 pub async fn get(args: Vec<String>, db: &Arc<Database>) -> Value {
     if let Some(arg) = args.first() {
         if let Some(res) = db.get(arg.to_string()).await {
-            return Value::BulkString(res.value);
+            return Value::BulkString(format!("\"{}\"", res.value));
         }
         return Value::NullBulkString();
     }
