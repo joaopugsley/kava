@@ -31,7 +31,7 @@ async fn handle_connection(stream: TcpStream) {
         let response = if let Some(val) = value {
             match parse_command(val) {
                 Ok((command, args)) => match command.to_lowercase().as_str() {
-                    "ping" => commands::ping(),
+                    "ping" => commands::ping(args),
                     unknown => panic!("Unknown command '{}'", unknown),
                 },
                 _ => {
