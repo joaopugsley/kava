@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{env, sync::Arc};
 
 use database::Database;
 use resp::{parse_command, ResponseHandler, Value};
@@ -10,7 +10,23 @@ mod resp;
 
 #[tokio::main]
 async fn main() {
-    let listener = TcpListener::bind("127.0.0.1:6379").await.unwrap();
+    let mut port = 6379;
+
+    let args: Vec<String> = env::args().collect();
+    for i in 0..args.len() {
+        match args[i].as_str() {
+            "--port" => {
+                if let Ok(port_arg) = args[i + 1].parse::<u16>() {
+                    port = port_arg;
+                }
+            }
+            _ => {}
+        }
+    }
+
+    let listener = TcpListener::bind(format!("127.0.0.1:{}", port))
+        .await
+        .unwrap();
     let db = Arc::new(Database::new());
 
     loop {
@@ -32,27 +48,29 @@ async fn handle_connection(stream: TcpStream, db: Arc<Database>) {
     let mut handler = ResponseHandler::new(stream);
 
     loop {
-        let value = handler.read_value().await.unwrap();
+        let value = handler.read_value().await;
 
-        let response = if let Some(val) = value {
-            match parse_command(val) {
-                Ok((command, args)) => match command.to_lowercase().as_str() {
-                    "quit" => commands::quit(),
-                    "info" => commands::info(),
-                    "ping" => commands::ping(args),
-                    "echo" => commands::echo(args),
-                    "get" => commands::get(args, &db).await,
-                    "set" => commands::set(args, &db).await,
-                    unknown => Value::SimpleError(format!("ERR Unknown command '{}'", unknown)),
-                },
-                _ => {
-                    break;
+        if let Ok(value) = value {
+            let response = if let Some(val) = value {
+                match parse_command(val) {
+                    Ok((command, args)) => match command.to_lowercase().as_str() {
+                        "quit" => commands::quit(),
+                        "info" => commands::info(),
+                        "ping" => commands::ping(args),
+                        "echo" => commands::echo(args),
+                        "get" => commands::get(args, &db).await,
+                        "set" => commands::set(args, &db).await,
+                        unknown => Value::SimpleError(format!("ERR Unknown command '{}'", unknown)),
+                    },
+                    _ => {
+                        break;
+                    }
                 }
-            }
-        } else {
-            break;
-        };
+            } else {
+                break;
+            };
 
-        handler.write_value(response).await.unwrap();
+            handler.write_value(response).await.unwrap();
+        }
     }
 }
