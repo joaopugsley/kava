@@ -30,10 +30,10 @@ Connect to the server using a ``Redis Client``. For example, using [redis-cli](h
 $ redis-cli -h 127.0.0.1 -p 6379
 
 # Try basic commands. For example, to test the connection and server response, you can use the PING command:
-$ PING
+$ PING "kava is awesome"
 
 # This should return:
-$ PONG
+$ PONG "kava is awesome"
 ```
 
 ## License
