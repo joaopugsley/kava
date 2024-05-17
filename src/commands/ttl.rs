@@ -20,5 +20,5 @@ pub async fn ttl(args: Vec<String>, db: &Arc<Database>) -> Value {
         }
         return Value::Integer(-2); // key does not exist
     }
-    Value::SimpleError("ERR wrong number of arguments for 'get' command".to_string())
+    Value::SimpleError("ERR wrong number of arguments for 'ttl' command".to_string())
 }
