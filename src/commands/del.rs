@@ -8,9 +8,7 @@ use crate::{
 // https://redis.io/docs/latest/commands/delete/
 pub async fn del(args: Vec<String>, db: &Arc<Database>) -> Value {
     if args.len() < 1 {
-        return Value::SimpleError(
-            "ERR wrong number of arguments for 'delete' command".to_string(),
-        );
+        return Value::SimpleError("ERR wrong number of arguments for 'del' command".to_string());
     }
 
     let mut total_deleted = 0;
