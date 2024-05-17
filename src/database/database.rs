@@ -52,4 +52,10 @@ impl Database {
             .or_insert(val.clone());
         Ok(val)
     }
+
+    pub async fn delete(&self, key: String) -> Result<(), Error> {
+        let mut store = self.store.lock().await;
+        store.data.remove(&key);
+        Ok(())
+    }
 }
