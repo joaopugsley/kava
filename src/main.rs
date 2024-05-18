@@ -4,25 +4,15 @@ use database::Database;
 use resp::{parse_command, ResponseHandler, Value};
 use tokio::net::{TcpListener, TcpStream};
 
+mod args;
 mod commands;
 mod database;
 mod resp;
 
 #[tokio::main]
 async fn main() {
-    let mut port = 6379;
-
     let args: Vec<String> = env::args().collect();
-    for i in 0..args.len() {
-        match args[i].as_str() {
-            "--port" => {
-                if let Ok(port_arg) = args[i + 1].parse::<u16>() {
-                    port = port_arg;
-                }
-            }
-            _ => {}
-        }
-    }
+    let port = args::get(&args, "--port").unwrap_or(6379);
 
     let listener = TcpListener::bind(format!("127.0.0.1:{}", port))
         .await
