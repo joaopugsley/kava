@@ -52,6 +52,7 @@ async fn handle_connection(stream: TcpStream, db: Arc<Database>) {
                         "set" => commands::set(args, &db).await,
                         "del" => commands::del(args, &db).await,
                         "ttl" => commands::ttl(args, &db).await,
+                        "expire" => commands::expire(args, &db).await,
                         unknown => Value::SimpleError(format!("ERR Unknown command '{}'", unknown)),
                     },
                     _ => {

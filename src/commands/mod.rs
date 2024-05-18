@@ -1,5 +1,6 @@
 mod del;
 mod echo;
+mod expire;
 mod get;
 mod info;
 mod ping;
@@ -9,6 +10,7 @@ mod ttl;
 
 pub use del::del;
 pub use echo::echo;
+pub use expire::expire;
 pub use get::get;
 pub use info::info;
 pub use ping::ping;
